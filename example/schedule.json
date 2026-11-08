@@ -1,0 +1,48 @@
+{
+  "mode": "asap",
+  "limits": {},
+  "inputs": [
+    "A_0",
+    "B_0"
+  ],
+  "num_cycles": 3,
+  "units": {
+    "add": 1,
+    "sub": 1,
+    "mul": 1
+  },
+  "ops": [
+    {
+      "dest": "X_1",
+      "op": "add",
+      "a": "A_0",
+      "b": "B_0",
+      "cycle": 1,
+      "unit": "add0"
+    },
+    {
+      "dest": "Y_1",
+      "op": "add",
+      "a": "X_1",
+      "b": "A_0",
+      "cycle": 2,
+      "unit": "add0"
+    },
+    {
+      "dest": "Z_1",
+      "op": "sub",
+      "a": "X_1",
+      "b": "B_0",
+      "cycle": 2,
+      "unit": "sub0"
+    },
+    {
+      "dest": "Q_1",
+      "op": "mul",
+      "a": "B_0",
+      "b": "Z_1",
+      "cycle": 3,
+      "unit": "mul0"
+    }
+  ]
+}

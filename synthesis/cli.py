@@ -10,9 +10,36 @@ from pprint import pprint
 
 from synthesis.equationparser import parseqs
 from synthesis.ssa import convertssa, exportssa
+from synthesis.dag import build_dag, print_dag
+from synthesis.scheduler import schedule, print_schedule, export_schedule
+from synthesis.codegen import write_verilog
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def project_path(filename):
+    """Paths typed by the user are relative to the project root."""
+    path = Path(filename.strip().strip('"').strip("'"))
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    return path
+
+
+def make_dag(equations):
+    """Parsed equations -> SSA -> DAG."""
+    return build_dag(convertssa(equations))
+
+
+def parse_options(words):
+    """Turn words like ['add=1', 'mul=2'] into {'add': 1, 'mul': 2}."""
+    options = {}
+    for word in words:
+        key, _, value = word.partition("=")
+        if not value.isdigit():
+            raise ValueError(f"Expected name=number, got '{word}'")
+        options[key] = int(value)
+    return options
 
 
 def load_file(filename):
@@ -59,6 +86,7 @@ def run(initial_file=None):
 
     # Makes sure current equation is none at start (will load a list of dictionaries at the start)
     current_equations = None
+    current_schedule = None
 
     # Only loads a file if one was provided through the command line
     if initial_file is not None:
@@ -101,6 +129,11 @@ def run(initial_file=None):
             print("  quit            - Exit program")
             print("  ssa             - Display SSA equations")
             print("  exportssa       - Export SSA equations to a file")
+            print("  dag             - Display the DAG")
+            print("  schedule <mode> [add=N] [sub=N] [mul=N] [latency=N]")
+            print("                  - Schedule with mode asap, alap, casap, calap or custom")
+            print("  exportschedule [file] - Export the schedule as JSON")
+            print("  verilog [file]  - Generate synth_core.v from the schedule")
 
         # Loads a file
         elif command == "load":
@@ -118,6 +151,7 @@ def run(initial_file=None):
 
             try:
                 current_equations = load_file(argument)
+                current_schedule = None
 
             except (OSError, ValueError) as error:
                 print("Error:", error)
@@ -200,6 +234,64 @@ def run(initial_file=None):
                     print(f"SSA exported to: {outputpath}")
 
                 except OSError as error:
+                    print("Error:", error)
+
+        # Displays the DAG built from the SSA equations
+        elif command == "dag":
+
+            if current_equations is None:
+                print("Please load an equation file first.")
+
+            else:
+                print_dag(make_dag(current_equations))
+
+        # Schedules the DAG, e.g. "schedule casap add=1 mul=1"
+        elif command == "schedule":
+
+            words = argument.split()
+
+            if current_equations is None:
+                print("Please load an equation file first.")
+
+            elif not words:
+                print("Usage: schedule <asap|alap|casap|calap|custom> [add=N] [sub=N] [mul=N] [latency=N]")
+
+            else:
+                try:
+                    options = parse_options(words[1:])
+                    latency = options.pop("latency", None)
+                    current_schedule = schedule(make_dag(current_equations), words[0].lower(),
+                                                options, latency)
+                    print_schedule(current_schedule)
+
+                except ValueError as error:
+                    print("Error:", error)
+
+        # Exports the schedule as JSON
+        elif command == "exportschedule":
+
+            if current_schedule is None:
+                print("Please run schedule first.")
+
+            else:
+                path = project_path(argument if argument else "example/schedule.json")
+                export_schedule(current_schedule, path)
+                print(f"Schedule exported to: {path}")
+
+        # Generates synth_core.v from the last schedule
+        elif command == "verilog":
+
+            if current_schedule is None:
+                print("Please run schedule first.")
+
+            else:
+                try:
+                    path = project_path(argument if argument else "verilog/generated/synth_core.v")
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    write_verilog(current_schedule, path)
+                    print(f"Verilog written to: {path}")
+
+                except (OSError, ValueError) as error:
                     print("Error:", error)
 
         # This is what shows for an unknown command
