@@ -1,0 +1,186 @@
+===============================================================================
+EC551 | BASYS 3 | AUTOMATIC PHYSICAL DEMO CHECKLIST
+===============================================================================
+Generated from the current equations + CURRENT schedule + RTL observation order.
+Every SW pattern includes all 16 switches; 1 = ON, 0 = OFF.
+Switches run SW15 (left) to SW0 (right). Press AND RELEASE buttons.
+Numbers on SELECT switches are IDs, NOT the calculated values.
+
+ORIGINAL EQUATIONS
+   1. X = A + B
+   2. Y = X + A
+   3. Z = X - B
+   4. Q = B * Z
+
+SSA EQUATIONS
+   1. X_1 = A_0 + B_0
+   2. Y_1 = X_1 + A_0
+   3. Z_1 = X_1 - B_0
+   4. Q_1 = B_0 * Z_1
+
+SCHEDULE & RESOURCE ALLOCATION
+   Mode: ASAP
+   Resource limits: none
+   Scheduled arithmetic cycles: 3
+   Physical resources: 1 add, 1 sub, 1 mul
+   Cycle 1: X_1 = A_0 + B_0 [add0] => 5
+   Cycle 2: Y_1 = X_1 + A_0 [add0] => 8
+   Cycle 2: Z_1 = X_1 - B_0 [sub0] => 3
+   Cycle 3: Q_1 = B_0 * Z_1 [mul0] => 6
+
+BOARD CONTROLS (matches current top.v)
+   SW15..14 = 00 LOAD | 01 RUN | 10 VIEW | 11 VIEW
+   SW13..8  = input ID during LOAD (6-bit)
+   SW7..0   = input VALUE during LOAD (8-bit: 0..255)
+   VIEW selector (7-bit): SW13=64, SW7=32, SW12..8=16,8,4,2,1
+   BTNC = save selected input, BTNU = advance one FSM state
+   BTND = reset (CLEARS inputs and results)
+   LED15..0 = current input preview in LOAD; selected value otherwise
+   Seven-segment left digit = selected variable or FU.
+   Rightmost three digits = decimal value.
+   Values above 999 alternate with an H thousands page.
+   LEDs show the full binary value.
+
+PREPARE THE BOARD
+[ ] Run your CLI: load <equations.txt> ; schedule <mode> ; verilog ; demo ...
+[ ] In Vivado: Design Top = top, valid basys3.xdc constraints.
+[ ] Run synthesis -> implementation -> generate bitstream.
+[ ] Hardware Manager -> Program Device with the NEW top.bit.
+    The LEDs alone following switches do NOT prove it is our design;
+    the original Digilent demo also does that.
+
+STEP 1 - RESET
+[ ] RESET FPGA
+    SW15..SW0: 0000000000000000
+    SWITCHES ON: NONE (all OFF)
+    ACTION: Press and release BTND once. All registers clear.
+
+STEP 2 - LOAD AND VERIFY EACH EXTERNAL INPUT
+   INPUT ID 0: A_0 (enter as A=number in CLI)
+[ ] LOAD A_0 = 3
+    SW15..SW0: 0000000000000011
+    SWITCHES ON: SW1, SW0
+    ACTION: Press and release BTNC once.
+
+[ ] VERIFY STORED A_0 (VIEW selector 0000111)
+    SW15..SW0: 1000011100000000
+    SWITCHES ON: SW15, SW10, SW9, SW8
+    ACTION: No button. SW6..0 OFF; SW7 is part of the VIEW selector. The LEDs should show the SAVED value. Return to LOAD (00) for next input.
+    EXPECTED: 3 decimal = 0000000000000011 binary
+    LEDs ON: LED1, LED0
+
+   INPUT ID 1: B_0 (enter as B=number in CLI)
+[ ] LOAD B_0 = 2
+    SW15..SW0: 0000000100000010
+    SWITCHES ON: SW8, SW1
+    ACTION: Press and release BTNC once.
+
+[ ] VERIFY STORED B_0 (VIEW selector 0001000)
+    SW15..SW0: 1000100000000000
+    SWITCHES ON: SW15, SW11
+    ACTION: No button. SW6..0 OFF; SW7 is part of the VIEW selector. The LEDs should show the SAVED value. Return to LOAD (00) for next input.
+    EXPECTED: 2 decimal = 0000000000000010 binary
+    LEDs ON: LED1
+
+STEP 3 - RUN: BTNU PRESS BY PRESS
+[ ] ENTER RUN MODE
+    SW15..SW0: 0100000000000000
+    SWITCHES ON: SW14
+    ACTION: Turn ON only SW14; do not reset.
+
+[ ] BTNU PRESS #1: START (state 0 -> state 1)
+    Press and release UP once. No calculation result is stored yet.
+
+[ ] BTNU PRESS #2: EXECUTE CYCLE 1 (state 1 -> 2)
+    Keep RUN: 0100000000000000 | ON: SW14; press/release BTNU once.
+    X_1 = A_0 + B_0 via add0 => 3 + 2 = 5
+    OPTIONAL CHECK: switch temporarily to VIEW (10), inspect:
+       X_1: VIEW ID=0000011; 1000001100000000; ON: SW15, SW9, SW8; EXPECT 5 / 0000000000000101; LEDs: LED2, LED0
+    Return to RUN: SW14 ON only before the next BTNU press.
+
+[ ] BTNU PRESS #3: EXECUTE CYCLE 2 (state 2 -> 3)
+    Keep RUN: 0100000000000000 | ON: SW14; press/release BTNU once.
+    Y_1 = X_1 + A_0 via add0 => 5 + 3 = 8
+    Z_1 = X_1 - B_0 via sub0 => 5 - 2 = 3
+    OPTIONAL CHECK: switch temporarily to VIEW (10), inspect:
+       Y_1: VIEW ID=0000100; 1000010000000000; ON: SW15, SW10; EXPECT 8 / 0000000000001000; LEDs: LED3
+       Z_1: VIEW ID=0000101; 1000010100000000; ON: SW15, SW10, SW8; EXPECT 3 / 0000000000000011; LEDs: LED1, LED0
+    Return to RUN: SW14 ON only before the next BTNU press.
+
+[ ] BTNU PRESS #4: EXECUTE CYCLE 3 (state 3 -> 4)
+    Keep RUN: 0100000000000000 | ON: SW14; press/release BTNU once.
+    Q_1 = B_0 * Z_1 via mul0 => 2 * 3 = 6
+    OPTIONAL CHECK: switch temporarily to VIEW (10), inspect:
+       Q_1: VIEW ID=0000110; 1000011000000000; ON: SW15, SW10, SW9; EXPECT 6 / 0000000000000110; LEDs: LED2, LED1
+    Return to RUN: SW14 ON only before the next BTNU press.
+
+   TOTAL BTNU PRESSES: 4
+   Final press enters DONE, no additional press required.
+
+STEP 4 - VIEW ALL STORED RESULTS AND FUNCTIONAL-UNIT OUTPUTS
+   Stay in VIEW (SW15=1, SW14=0); no button presses needed.
+   Selector IDs EXACTLY match codegen.view_list(schedule).
+   FU observations at DONE require your UPDATED *_last codegen.py;
+   with the original live-output generator, FU values may differ.
+
+[ ] VIEW UNIT     add0                 ID= 0 (7-bit ID=0000000)
+    SW15..SW0: 1000000000000000
+    SWITCHES ON: SW15
+    EXPECTED: 8 decimal | binary 0000000000001000
+    LEDs ON: LED3
+
+[ ] VIEW UNIT     sub0                 ID= 1 (7-bit ID=0000001)
+    SW15..SW0: 1000000100000000
+    SWITCHES ON: SW15, SW8
+    EXPECTED: 3 decimal | binary 0000000000000011
+    LEDs ON: LED1, LED0
+
+[ ] VIEW UNIT     mul0                 ID= 2 (7-bit ID=0000010)
+    SW15..SW0: 1000001000000000
+    SWITCHES ON: SW15, SW9
+    EXPECTED: 6 decimal | binary 0000000000000110
+    LEDs ON: LED2, LED1
+
+[ ] VIEW REGISTER X_1                  ID= 3 (7-bit ID=0000011)
+    SW15..SW0: 1000001100000000
+    SWITCHES ON: SW15, SW9, SW8
+    EXPECTED: 5 decimal | binary 0000000000000101
+    LEDs ON: LED2, LED0
+
+[ ] VIEW REGISTER Y_1                  ID= 4 (7-bit ID=0000100)
+    SW15..SW0: 1000010000000000
+    SWITCHES ON: SW15, SW10
+    EXPECTED: 8 decimal | binary 0000000000001000
+    LEDs ON: LED3
+
+[ ] VIEW REGISTER Z_1                  ID= 5 (7-bit ID=0000101)
+    SW15..SW0: 1000010100000000
+    SWITCHES ON: SW15, SW10, SW8
+    EXPECTED: 3 decimal | binary 0000000000000011
+    LEDs ON: LED1, LED0
+
+[ ] VIEW REGISTER Q_1                  ID= 6 (7-bit ID=0000110)
+    SW15..SW0: 1000011000000000
+    SWITCHES ON: SW15, SW10, SW9
+    EXPECTED: 6 decimal | binary 0000000000000110
+    LEDs ON: LED2, LED1
+
+[ ] VIEW INPUT    A_0                  ID= 7 (7-bit ID=0000111)
+    SW15..SW0: 1000011100000000
+    SWITCHES ON: SW15, SW10, SW9, SW8
+    EXPECTED: 3 decimal | binary 0000000000000011
+    LEDs ON: LED1, LED0
+
+[ ] VIEW INPUT    B_0                  ID= 8 (7-bit ID=0001000)
+    SW15..SW0: 1000100000000000
+    SWITCHES ON: SW15, SW11
+    EXPECTED: 2 decimal | binary 0000000000000010
+    LEDs ON: LED1
+
+WARNINGS & LIMITS
+   Current 16-bit datapath wraps for results above 65535.
+   Subtraction results must be nonnegative for the assignment demo.
+   Current 5-bit state supports at most 30 arithmetic cycles.
+   If you change equations/schedule: regenerate synth_core.v, rebuild
+   the bitstream and program the board before following this TXT.
+===============================================================================

@@ -18,7 +18,7 @@ module synth_core #(parameter W = 16) (
     input  wire [5:0]   in_sel,    // which input to set (SW13-SW8)
     input  wire [7:0]   in_val,    // value for that input
     input  wire         in_write,  // one-cycle pulse: store in_val (LOAD state only)
-    input  wire [4:0]   fu_sel,    // which value disp_val shows
+    input  wire [6:0]   fu_sel,    // which value disp_val shows
     output reg  [W-1:0] disp_val,
     output wire [4:0]   state,     // 0 = LOAD, 1..3 = cycles, 4 = DONE
     output wire         done
@@ -52,16 +52,25 @@ module synth_core #(parameter W = 16) (
     wire [W-1:0] add0_b = (add0_sel_b == 0) ? r_B_0 : r_A_0;
     wire [W-1:0] add0_y;
     adder #(.W(W)) u_add0 (.a(add0_a), .b(add0_b), .y(add0_y));
+    wire add0_active = (st == 1) || (st == 2);
+    reg [W-1:0] add0_last;
+    wire [W-1:0] add0_observed = add0_active ? add0_y : add0_last;
 
     wire [W-1:0] sub0_a = r_X_1;
     wire [W-1:0] sub0_b = r_B_0;
     wire [W-1:0] sub0_y;
     subtractor #(.W(W)) u_sub0 (.a(sub0_a), .b(sub0_b), .y(sub0_y));
+    wire sub0_active = (st == 2);
+    reg [W-1:0] sub0_last;
+    wire [W-1:0] sub0_observed = sub0_active ? sub0_y : sub0_last;
 
     wire [W-1:0] mul0_a = r_B_0;
     wire [W-1:0] mul0_b = r_Z_1;
     wire [W-1:0] mul0_y;
     multiplier #(.W(W)) u_mul0 (.a(mul0_a), .b(mul0_b), .y(mul0_y));
+    wire mul0_active = (st == 3);
+    reg [W-1:0] mul0_last;
+    wire [W-1:0] mul0_observed = mul0_active ? mul0_y : mul0_last;
 
     // ---------------- Register writes ----------------
     always @(posedge clk) begin
@@ -72,6 +81,9 @@ module synth_core #(parameter W = 16) (
             r_Y_1 <= 0;
             r_Z_1 <= 0;
             r_Q_1 <= 0;
+            add0_last <= 0;
+            sub0_last <= 0;
+            mul0_last <= 0;
         end else begin
             if (in_write && load) begin
                 case (in_sel)
@@ -81,6 +93,9 @@ module synth_core #(parameter W = 16) (
                 endcase
             end
             if (step) begin
+                if (add0_active) add0_last <= add0_y;
+                if (sub0_active) sub0_last <= sub0_y;
+                if (mul0_active) mul0_last <= mul0_y;
                 if (en_X_1) r_X_1 <= add0_y;
                 if (en_Y_1) r_Y_1 <= add0_y;
                 if (en_Z_1) r_Z_1 <= sub0_y;
@@ -92,9 +107,9 @@ module synth_core #(parameter W = 16) (
     // ---------------- fu_sel picks what disp_val shows ----------------
     always @(*) begin
         case (fu_sel)
-            0: disp_val = add0_y;
-            1: disp_val = sub0_y;
-            2: disp_val = mul0_y;
+            0: disp_val = add0_observed;
+            1: disp_val = sub0_observed;
+            2: disp_val = mul0_observed;
             3: disp_val = r_X_1;
             4: disp_val = r_Y_1;
             5: disp_val = r_Z_1;

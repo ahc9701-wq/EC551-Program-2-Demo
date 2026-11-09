@@ -1,24 +1,27 @@
-# Python
+# Python cache
 __pycache__/
 *.pyc
-.venv/
 
-# Vivado
+# Python environment
+.venv/
+venv/
+
+# Vivado generated files
 *.jou
 *.log
 *.str
+.Xil/
 *.cache/
-*.hw/
 *.runs/
 *.sim/
+*.hw/
 *.ip_user_files/
-.Xil/
 
-# Simulation
-*.vcd
-*.vvp
+# Simulation generated files
+xsim.dir/
+*.wdb
+*.pb
 
-# OS / editor
+# Operating system
 .DS_Store
-.vscode/
-.idea/
+Thumbs.db

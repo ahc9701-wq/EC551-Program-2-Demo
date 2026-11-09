@@ -49,7 +49,7 @@ def parseqs(filename):
         })
 
     # Assignment allows a maximum of 20 equations
-    if len(equations) > 21:
+    if len(equations) > 20:
         raise ValueError("Maximum of 20 equations allowed.")
 
     return equations
