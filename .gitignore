@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Vivado
+*.jou
+*.log
+*.str
+*.cache/
+*.hw/
+*.runs/
+*.sim/
+*.ip_user_files/
+.Xil/
+
+# Simulation
+*.vcd
+*.vvp
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
