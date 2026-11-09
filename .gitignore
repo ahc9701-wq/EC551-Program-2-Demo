@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Python environment
+.venv/
+venv/
+
+# Vivado generated files
+*.jou
+*.log
+*.str
+.Xil/
+*.cache/
+*.runs/
+*.sim/
+*.hw/
+*.ip_user_files/
+
+# Simulation generated files
+xsim.dir/
+*.wdb
+*.pb
+
+# Operating system
+.DS_Store
+Thumbs.db
