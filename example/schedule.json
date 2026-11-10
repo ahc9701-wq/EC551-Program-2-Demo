@@ -1,5 +1,5 @@
 {
-  "mode": "asap",
+  "mode": "alap",
   "limits": {},
   "inputs": [
     "A_0",
@@ -22,25 +22,25 @@
     },
     {
       "dest": "Y_1",
-      "op": "add",
+      "op": "mul",
       "a": "X_1",
       "b": "A_0",
       "cycle": 2,
-      "unit": "add0"
+      "unit": "mul0"
     },
     {
       "dest": "Z_1",
       "op": "sub",
-      "a": "X_1",
+      "a": "Y_1",
       "b": "B_0",
-      "cycle": 2,
+      "cycle": 3,
       "unit": "sub0"
     },
     {
-      "dest": "Q_1",
+      "dest": "W_1",
       "op": "mul",
-      "a": "B_0",
-      "b": "Z_1",
+      "a": "A_0",
+      "b": "B_0",
       "cycle": 3,
       "unit": "mul0"
     }

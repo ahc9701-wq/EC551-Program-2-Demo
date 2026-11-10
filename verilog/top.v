@@ -89,14 +89,22 @@ module top #(
     // ----------------------------------------
     // Seven-segment numerical display
     // ----------------------------------------
+    // Shows the current FSM state.
+    // LOAD and VIEW keep their existing display behavior.
+    wire [7:0] sevenseg_label =
+        run_mode ? "C" : current_label;
+
+    wire [15:0] sevenseg_value =
+        run_mode ? {11'b0, state} : led;
 
     sevenseg #(
         .REFRESH_DIV(DISPLAY_REFRESH_DIV),
         .PAGE_CYCLES(DISPLAY_PAGE_CYCLES)
     ) display (
         .clk(clk),
-        .label(current_label),
-        .value(led),
+        .label(sevenseg_label),
+        .value(sevenseg_value),
+        .show_done(run_mode && done),
         .seg(seg),
         .an(an),
         .dp(dp)

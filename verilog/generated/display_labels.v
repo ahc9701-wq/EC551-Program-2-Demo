@@ -21,7 +21,7 @@ always @(*) begin
             7'd3: label = 8'd88; // X_1
             7'd4: label = 8'd89; // Y_1
             7'd5: label = 8'd90; // Z_1
-            7'd6: label = 8'd81; // Q_1
+            7'd6: label = 8'd87; // W_1
             7'd7: label = 8'd65; // A_0
             7'd8: label = 8'd66; // B_0
             default: label = 8'd45;

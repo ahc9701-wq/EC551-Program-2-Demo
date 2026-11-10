@@ -8,25 +8,25 @@ Numbers on SELECT switches are IDs, NOT the calculated values.
 
 ORIGINAL EQUATIONS
    1. X = A + B
-   2. Y = X + A
-   3. Z = X - B
-   4. Q = B * Z
+   2. Y = X * A
+   3. Z = Y - B
+   4. W = A * B
 
 SSA EQUATIONS
    1. X_1 = A_0 + B_0
-   2. Y_1 = X_1 + A_0
-   3. Z_1 = X_1 - B_0
-   4. Q_1 = B_0 * Z_1
+   2. Y_1 = X_1 * A_0
+   3. Z_1 = Y_1 - B_0
+   4. W_1 = A_0 * B_0
 
 SCHEDULE & RESOURCE ALLOCATION
-   Mode: ASAP
+   Mode: ALAP
    Resource limits: none
    Scheduled arithmetic cycles: 3
    Physical resources: 1 add, 1 sub, 1 mul
    Cycle 1: X_1 = A_0 + B_0 [add0] => 5
-   Cycle 2: Y_1 = X_1 + A_0 [add0] => 8
-   Cycle 2: Z_1 = X_1 - B_0 [sub0] => 3
-   Cycle 3: Q_1 = B_0 * Z_1 [mul0] => 6
+   Cycle 2: Y_1 = X_1 * A_0 [mul0] => 15
+   Cycle 3: Z_1 = Y_1 - B_0 [sub0] => 13
+   Cycle 3: W_1 = A_0 * B_0 [mul0] => 6
 
 BOARD CONTROLS (matches current top.v)
    SW15..14 = 00 LOAD | 01 RUN | 10 VIEW | 11 VIEW
@@ -100,18 +100,18 @@ STEP 3 - RUN: BTNU PRESS BY PRESS
 
 [ ] BTNU PRESS #3: EXECUTE CYCLE 2 (state 2 -> 3)
     Keep RUN: 0100000000000000 | ON: SW14; press/release BTNU once.
-    Y_1 = X_1 + A_0 via add0 => 5 + 3 = 8
-    Z_1 = X_1 - B_0 via sub0 => 5 - 2 = 3
+    Y_1 = X_1 * A_0 via mul0 => 5 * 3 = 15
     OPTIONAL CHECK: switch temporarily to VIEW (10), inspect:
-       Y_1: VIEW ID=0000100; 1000010000000000; ON: SW15, SW10; EXPECT 8 / 0000000000001000; LEDs: LED3
-       Z_1: VIEW ID=0000101; 1000010100000000; ON: SW15, SW10, SW8; EXPECT 3 / 0000000000000011; LEDs: LED1, LED0
+       Y_1: VIEW ID=0000100; 1000010000000000; ON: SW15, SW10; EXPECT 15 / 0000000000001111; LEDs: LED3, LED2, LED1, LED0
     Return to RUN: SW14 ON only before the next BTNU press.
 
 [ ] BTNU PRESS #4: EXECUTE CYCLE 3 (state 3 -> 4)
     Keep RUN: 0100000000000000 | ON: SW14; press/release BTNU once.
-    Q_1 = B_0 * Z_1 via mul0 => 2 * 3 = 6
+    Z_1 = Y_1 - B_0 via sub0 => 15 - 2 = 13
+    W_1 = A_0 * B_0 via mul0 => 3 * 2 = 6
     OPTIONAL CHECK: switch temporarily to VIEW (10), inspect:
-       Q_1: VIEW ID=0000110; 1000011000000000; ON: SW15, SW10, SW9; EXPECT 6 / 0000000000000110; LEDs: LED2, LED1
+       Z_1: VIEW ID=0000101; 1000010100000000; ON: SW15, SW10, SW8; EXPECT 13 / 0000000000001101; LEDs: LED3, LED2, LED0
+       W_1: VIEW ID=0000110; 1000011000000000; ON: SW15, SW10, SW9; EXPECT 6 / 0000000000000110; LEDs: LED2, LED1
     Return to RUN: SW14 ON only before the next BTNU press.
 
    TOTAL BTNU PRESSES: 4
@@ -126,14 +126,14 @@ STEP 4 - VIEW ALL STORED RESULTS AND FUNCTIONAL-UNIT OUTPUTS
 [ ] VIEW UNIT     add0                 ID= 0 (7-bit ID=0000000)
     SW15..SW0: 1000000000000000
     SWITCHES ON: SW15
-    EXPECTED: 8 decimal | binary 0000000000001000
-    LEDs ON: LED3
+    EXPECTED: 5 decimal | binary 0000000000000101
+    LEDs ON: LED2, LED0
 
 [ ] VIEW UNIT     sub0                 ID= 1 (7-bit ID=0000001)
     SW15..SW0: 1000000100000000
     SWITCHES ON: SW15, SW8
-    EXPECTED: 3 decimal | binary 0000000000000011
-    LEDs ON: LED1, LED0
+    EXPECTED: 13 decimal | binary 0000000000001101
+    LEDs ON: LED3, LED2, LED0
 
 [ ] VIEW UNIT     mul0                 ID= 2 (7-bit ID=0000010)
     SW15..SW0: 1000001000000000
@@ -150,16 +150,16 @@ STEP 4 - VIEW ALL STORED RESULTS AND FUNCTIONAL-UNIT OUTPUTS
 [ ] VIEW REGISTER Y_1                  ID= 4 (7-bit ID=0000100)
     SW15..SW0: 1000010000000000
     SWITCHES ON: SW15, SW10
-    EXPECTED: 8 decimal | binary 0000000000001000
-    LEDs ON: LED3
+    EXPECTED: 15 decimal | binary 0000000000001111
+    LEDs ON: LED3, LED2, LED1, LED0
 
 [ ] VIEW REGISTER Z_1                  ID= 5 (7-bit ID=0000101)
     SW15..SW0: 1000010100000000
     SWITCHES ON: SW15, SW10, SW8
-    EXPECTED: 3 decimal | binary 0000000000000011
-    LEDs ON: LED1, LED0
+    EXPECTED: 13 decimal | binary 0000000000001101
+    LEDs ON: LED3, LED2, LED0
 
-[ ] VIEW REGISTER Q_1                  ID= 6 (7-bit ID=0000110)
+[ ] VIEW REGISTER W_1                  ID= 6 (7-bit ID=0000110)
     SW15..SW0: 1000011000000000
     SWITCHES ON: SW15, SW10, SW9
     EXPECTED: 6 decimal | binary 0000000000000110

@@ -7,7 +7,7 @@
 // fu_sel  3 shows X_1
 // fu_sel  4 shows Y_1
 // fu_sel  5 shows Z_1
-// fu_sel  6 shows Q_1
+// fu_sel  6 shows W_1
 // fu_sel  7 shows A_0
 // fu_sel  8 shows B_0
 
@@ -36,39 +36,39 @@ module synth_core #(parameter W = 16) (
     end
 
     // ---------------- Registers: one per variable ----------------
-    reg [W-1:0] r_A_0, r_B_0, r_X_1, r_Y_1, r_Z_1, r_Q_1;
+    reg [W-1:0] r_A_0, r_B_0, r_X_1, r_Y_1, r_Z_1, r_W_1;
 
     // ---------------- FSM outputs: write enables ----------------
     wire load = (st == 0);
     wire en_X_1 = (st == 1);
     wire en_Y_1 = (st == 2);
-    wire en_Z_1 = (st == 2);
-    wire en_Q_1 = (st == 3);
+    wire en_Z_1 = (st == 3);
+    wire en_W_1 = (st == 3);
 
     // ---------------- Datapath: muxes and functional units ----------------
-    wire [4:0]   add0_sel_a = (st == 1) ? 0 : (st == 2) ? 1 : 0;
-    wire [W-1:0] add0_a = (add0_sel_a == 0) ? r_A_0 : r_X_1;
-    wire [4:0]   add0_sel_b = (st == 1) ? 0 : (st == 2) ? 1 : 0;
-    wire [W-1:0] add0_b = (add0_sel_b == 0) ? r_B_0 : r_A_0;
+    wire [W-1:0] add0_a = r_A_0;
+    wire [W-1:0] add0_b = r_B_0;
     wire [W-1:0] add0_y;
     adder #(.W(W)) u_add0 (.a(add0_a), .b(add0_b), .y(add0_y));
-    wire add0_active = (st == 1) || (st == 2);
+    wire add0_active = (st == 1);
     reg [W-1:0] add0_last;
     wire [W-1:0] add0_observed = add0_active ? add0_y : add0_last;
 
-    wire [W-1:0] sub0_a = r_X_1;
+    wire [W-1:0] sub0_a = r_Y_1;
     wire [W-1:0] sub0_b = r_B_0;
     wire [W-1:0] sub0_y;
     subtractor #(.W(W)) u_sub0 (.a(sub0_a), .b(sub0_b), .y(sub0_y));
-    wire sub0_active = (st == 2);
+    wire sub0_active = (st == 3);
     reg [W-1:0] sub0_last;
     wire [W-1:0] sub0_observed = sub0_active ? sub0_y : sub0_last;
 
-    wire [W-1:0] mul0_a = r_B_0;
-    wire [W-1:0] mul0_b = r_Z_1;
+    wire [4:0]   mul0_sel_a = (st == 2) ? 0 : (st == 3) ? 1 : 0;
+    wire [W-1:0] mul0_a = (mul0_sel_a == 0) ? r_X_1 : r_A_0;
+    wire [4:0]   mul0_sel_b = (st == 2) ? 0 : (st == 3) ? 1 : 0;
+    wire [W-1:0] mul0_b = (mul0_sel_b == 0) ? r_A_0 : r_B_0;
     wire [W-1:0] mul0_y;
     multiplier #(.W(W)) u_mul0 (.a(mul0_a), .b(mul0_b), .y(mul0_y));
-    wire mul0_active = (st == 3);
+    wire mul0_active = (st == 2) || (st == 3);
     reg [W-1:0] mul0_last;
     wire [W-1:0] mul0_observed = mul0_active ? mul0_y : mul0_last;
 
@@ -80,7 +80,7 @@ module synth_core #(parameter W = 16) (
             r_X_1 <= 0;
             r_Y_1 <= 0;
             r_Z_1 <= 0;
-            r_Q_1 <= 0;
+            r_W_1 <= 0;
             add0_last <= 0;
             sub0_last <= 0;
             mul0_last <= 0;
@@ -97,9 +97,9 @@ module synth_core #(parameter W = 16) (
                 if (sub0_active) sub0_last <= sub0_y;
                 if (mul0_active) mul0_last <= mul0_y;
                 if (en_X_1) r_X_1 <= add0_y;
-                if (en_Y_1) r_Y_1 <= add0_y;
+                if (en_Y_1) r_Y_1 <= mul0_y;
                 if (en_Z_1) r_Z_1 <= sub0_y;
-                if (en_Q_1) r_Q_1 <= mul0_y;
+                if (en_W_1) r_W_1 <= mul0_y;
             end
         end
     end
@@ -113,7 +113,7 @@ module synth_core #(parameter W = 16) (
             3: disp_val = r_X_1;
             4: disp_val = r_Y_1;
             5: disp_val = r_Z_1;
-            6: disp_val = r_Q_1;
+            6: disp_val = r_W_1;
             7: disp_val = r_A_0;
             8: disp_val = r_B_0;
             default: disp_val = 0;

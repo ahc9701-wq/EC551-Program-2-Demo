@@ -8,6 +8,7 @@ module sevenseg #(
     input wire clk,
     input wire [7:0] label,
     input wire [15:0] value,
+    input wire show_done,
     output reg [6:0] seg,
     output reg [3:0] an,
     output wire dp
@@ -94,6 +95,14 @@ module sevenseg #(
 
             tens = (large_value || value >= 10) ?
                 ("0" + {4'b0, bcd[7:4]}) : " ";
+        end
+
+        // Override all four digits when computation finishes.
+        if (show_done) begin
+            left_char = "d";
+            hundreds = "o";
+            tens = "n";
+            ones = "E";
         end
     end
 
