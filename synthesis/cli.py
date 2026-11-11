@@ -344,7 +344,7 @@ def run(initial_file=None):
                     # Shows which switches select which output
                     print("\nFPGA OUTPUT MAPPING")
                     for i, (name, signal) in enumerate(view_list(current_schedule)):
-                        print(f"{i:05b} -> {name}")
+                        print(f"{i:07b} -> {name}")
 
                 except (OSError, ValueError) as error:
                     print("Error:", error)
