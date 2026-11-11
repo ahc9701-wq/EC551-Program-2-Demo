@@ -353,11 +353,11 @@ board is connected and programmed with the bitstream for
 | Time | Part | What we show |
 |---|---|---|
 | 0:00-2:00 | Overview | The pipeline diagram and the repository structure in this README |
-| 2:00-6:00 | Software walk-through | `example/examples.txt`: `show`, `inputs`, `ssa`, `exportssa`, `dag`, then `schedule` in all five modes, `exportschedule`, `verilog`, `tb`, `demo`. We open `synth_core.v` and point out the registers, the shared `mul0` with its muxes, and the FSM |
-| 6:00-9:00 | Hardware walk-through | The pre-programmed board with A=3, B=2: reset, LOAD both inputs, step with BTNU while viewing `add0` / `mul0` / `sub0`, `donE`, then VIEW X=5, Y=15, Z=13, W=6 |
-| 9:00-16:00 | Live run 1 | Professor's equations, unconstrained (`asap` or `alap`) |
-| 16:00-23:00 | Live run 2 | Professor's equations with resource limits (`casap` or `calap`, e.g. `add=1 mul=1`), compared with the unconstrained schedule |
-| 23:00-29:00 | Live run 3 | Professor's equations with `custom`, compared with `casap` under the same limits |
+| 2:00-5:00 | Software walk-through | `example/examples.txt`: `show`, `inputs`, `ssa`, `exportssa`, `dag`, then `schedule` in all five modes, `exportschedule`, `verilog`, `tb`, `demo`. We open `synth_core.v` and point out the registers, the shared `mul0` with its muxes, and the FSM |
+| 5:00-8:00 | Hardware walk-through | The pre-programmed board with A=3, B=2: reset, LOAD both inputs, step with BTNU while viewing `add0` / `mul0` / `sub0`, `donE`, then VIEW X=5, Y=15, Z=13, W=6 |
+| 8:00-15:00 | Live run 1 | Professor's equations, unconstrained (`asap` or `alap`) |
+| 15:00-22:00 | Live run 2 | Professor's equations with resource limits (`casap` or `calap`, e.g. `add=1 mul=1`), compared with the unconstrained schedule |
+| 22:00-29:00 | Live run 3 | Professor's equations with `custom`, compared with `casap` under the same limits |
 | 29:00-30:00 | Wrap-up | Questions |
 
 Each live run takes about 7 minutes:
